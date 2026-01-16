@@ -2,7 +2,24 @@ import React from 'react';
 import classNames from 'classnames';
 import { UserInfo } from '../UserInfo/UserInfo';
 
-export const TodoInfo = ({ todo }) => {
+type Todo = {
+  id: number;
+  title: string;
+  completed: boolean;
+  userId: number;
+  user?: {
+    id: number;
+    name: string;
+    username: string;
+    email: string;
+  };
+};
+
+interface Props {
+  todo: Todo;
+}
+
+export const TodoInfo: React.FC<Props> = ({ todo }) => {
   return (
     <article
       data-id={todo.id}

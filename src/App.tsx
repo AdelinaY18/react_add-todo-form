@@ -3,18 +3,33 @@ import todosFromServer from './api/todos';
 import usersFromServer from './api/users';
 import { TodoList } from './components/TodoList/TodoList';
 
-export const App = () => {
-  const [todos, setTodos] = useState(todosFromServer);
+type User = {
+  id: number;
+  name: string;
+  username: string;
+  email: string;
+};
+
+type Todo = {
+  id: number;
+  title: string;
+  completed: boolean;
+  userId: number;
+  user?: User;
+};
+
+export const App: React.FC = () => {
+  const [todos, setTodos] = useState<Todo[]>(todosFromServer);
   const [title, setTitle] = useState('');
-  const [userId, setUserId] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState<number | ''>('');
   const [titleError, setTitleError] = useState(false);
   const [userError, setUserError] = useState(false);
 
-  const handleSubmit = event => {
+  const handleAddTodo = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const isTitleEmpty = title.trim() === '';
-    const isUserEmpty = userId === '';
+    const isUserEmpty = selectedUserId === '';
 
     setTitleError(isTitleEmpty);
     setUserError(isUserEmpty);
@@ -23,13 +38,15 @@ export const App = () => {
       return;
     }
 
+    const user = usersFromServer.find(u => u.id === selectedUserId);
+
+    if (!user) {
+      return;
+    }
+
     const maxId = todos.length ? Math.max(...todos.map(todo => todo.id)) : 0;
 
-    const user = usersFromServer.find(
-      currentUser => currentUser.id === Number(userId),
-    );
-
-    const newTodo = {
+    const newTodo: Todo = {
       id: maxId + 1,
       title,
       completed: false,
@@ -39,14 +56,14 @@ export const App = () => {
 
     setTodos([...todos, newTodo]);
     setTitle('');
-    setUserId('');
+    setSelectedUserId('');
   };
 
   return (
     <div className="App">
       <h1>Add todo</h1>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleAddTodo}>
         <div className="field">
           <input
             data-cy="titleInput"
@@ -64,25 +81,25 @@ export const App = () => {
         <div className="field">
           <select
             data-cy="userSelect"
-            value={userId}
+            value={selectedUserId}
             onChange={event => {
-              setUserId(event.target.value);
+              setSelectedUserId(Number(event.target.value));
               setUserError(false);
             }}
           >
             <option value="">Choose a user</option>
-
-            {usersFromServer.map(user => (
-              <option key={user.id} value={user.id}>
-                {user.name}
+            {usersFromServer.map(u => (
+              <option key={u.id} value={u.id}>
+                {u.name}
               </option>
             ))}
           </select>
-
           {userError && <span className="error">Please choose a user</span>}
         </div>
 
-        <button type="submit">Add</button>
+        <button type="submit" data-cy="submitButton">
+          Add
+        </button>
       </form>
 
       <TodoList todos={todos} />
