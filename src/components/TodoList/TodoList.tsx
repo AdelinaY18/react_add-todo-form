@@ -1,4 +1,5 @@
-import { TodoInfo } from '../TodoInfo';
+import React from 'react';
+import { TodoInfo } from '../TodoInfo/TodoInfo';
 
 export const TodoList = ({ todos }) => {
   return (

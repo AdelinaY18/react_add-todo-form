@@ -1,56 +1,60 @@
-import { useState } from 'react';
-import './App.scss';
-import usersFromServer from './api/users';
+import React, { useState } from 'react';
 import todosFromServer from './api/todos';
-import { TodoList } from './components/TodoList';
+import usersFromServer from './api/users';
+import { TodoList } from './components/TodoList/TodoList';
 
 export const App = () => {
   const [todos, setTodos] = useState(todosFromServer);
   const [title, setTitle] = useState('');
-  const [userId, setUserId] = useState(0);
+  const [userId, setUserId] = useState('');
   const [titleError, setTitleError] = useState(false);
   const [userError, setUserError] = useState(false);
 
-  const addTodo = e => {
-    e.preventDefault();
+  const handleSubmit = event => {
+    event.preventDefault();
 
-    if (!title) {
-      setTitleError(true);
-    }
+    const isTitleEmpty = title.trim() === '';
+    const isUserEmpty = userId === '';
 
-    if (!userId) {
-      setUserError(true);
-    }
+    setTitleError(isTitleEmpty);
+    setUserError(isUserEmpty);
 
-    if (!title || !userId) {
+    if (isTitleEmpty || isUserEmpty) {
       return;
     }
 
+    const maxId = todos.length ? Math.max(...todos.map(todo => todo.id)) : 0;
+
+    const user = usersFromServer.find(
+      currentUser => currentUser.id === Number(userId),
+    );
+
     const newTodo = {
-      id: Math.max(...todos.map(t => t.id)) + 1,
+      id: maxId + 1,
       title,
       completed: false,
-      userId,
-      user: usersFromServer.find(u => u.id === userId),
+      userId: user.id,
+      user,
     };
 
     setTodos([...todos, newTodo]);
     setTitle('');
-    setUserId(0);
+    setUserId('');
   };
 
   return (
     <div className="App">
-      <h1>Add todo form</h1>
+      <h1>Add todo</h1>
 
-      <form onSubmit={addTodo}>
+      <form onSubmit={handleSubmit}>
         <div className="field">
           <input
             data-cy="titleInput"
-            placeholder="Enter title"
+            type="text"
+            placeholder="Enter a title"
             value={title}
-            onChange={e => {
-              setTitle(e.target.value);
+            onChange={event => {
+              setTitle(event.target.value);
               setTitleError(false);
             }}
           />
@@ -61,24 +65,24 @@ export const App = () => {
           <select
             data-cy="userSelect"
             value={userId}
-            onChange={e => {
-              setUserId(Number(e.target.value));
+            onChange={event => {
+              setUserId(event.target.value);
               setUserError(false);
             }}
           >
-            <option value={0}>Choose a user</option>
-            {usersFromServer.map(u => (
-              <option key={u.id} value={u.id}>
-                {u.name}
+            <option value="">Choose a user</option>
+
+            {usersFromServer.map(user => (
+              <option key={user.id} value={user.id}>
+                {user.name}
               </option>
             ))}
           </select>
+
           {userError && <span className="error">Please choose a user</span>}
         </div>
 
-        <button type="submit" data-cy="submitButton">
-          Add
-        </button>
+        <button type="submit">Add</button>
       </form>
 
       <TodoList todos={todos} />
